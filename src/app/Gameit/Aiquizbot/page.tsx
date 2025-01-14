@@ -39,12 +39,12 @@ export default function Home() {
       return cate.name.toLowerCase().includes(search.toLowerCase());
     });
     setCategoriesData(searchedCate);
-    searchedCate.length == 0 ? setHasError(true) : setHasError(false);
+    setHasError(searchedCate.length === 0);
   };
 
   const startTimer = () => {
     if (time > 0) {
-      setTime(time - 1);
+      setTime((prevTime) => prevTime - 1);
     }
   };
 
@@ -64,20 +64,20 @@ export default function Home() {
     setIsOpen(true);
     setCorrectAns(false);
     setCurrentQuestion(currentQuestion);
-    let res: any = await createQuestion(title);
-    let question = string_between_strings("[[", "]]", res);
-    let opt1 = string_between_strings("$$", "$$", res);
-    let opt2 = string_between_strings("@@", "@@", res);
-    let opt3 = string_between_strings("##", "##", res);
-    let opt4 = string_between_strings("&&", "&&", res);
-    let correctAns = string_between_strings("~~~", "~~~", res);
+    const res: any = await createQuestion(title);
+    const question = string_between_strings("[[", "]]", res);
+    const opt1 = string_between_strings("$$", "$$", res);
+    const opt2 = string_between_strings("@@", "@@", res);
+    const opt3 = string_between_strings("##", "##", res);
+    const opt4 = string_between_strings("&&", "&&", res);
+    const correctAns = string_between_strings("~~~", "~~~", res);
 
     setQuizData({
-      ...quizData,
       question,
       options: { a: opt1, b: opt2, c: opt3, d: opt4 },
       correctAnswer: correctAns,
-      currentQuestion: currentQuestion,
+      currentQuestion,
+      totalCorrectAnswers: quizData.totalCorrectAnswers,
     });
     setIsLoading(false);
     setTime(10);
@@ -85,14 +85,14 @@ export default function Home() {
   };
 
   const createQuestion = async (title: string) => {
-    let prompt: any = await createPrompt(title);
+    const prompt: any = await createPrompt(title);
     if (prompt.status) {
-      let exactPrompt = string_between_strings(
+      const exactPrompt = string_between_strings(
         "[[",
         "]]",
         prompt.generatedPrompt
       );
-      let res = await generateQuestion(exactPrompt);
+      const res = await generateQuestion(exactPrompt);
       if (res.status) {
         return res.question;
       } else {
@@ -105,10 +105,10 @@ export default function Home() {
 
   const checkAnswer = (ans: string, option: string) => {
     if (ans === quizData.correctAnswer) {
-      setQuizData({
-        ...quizData,
-        totalCorrectAnswers: quizData.totalCorrectAnswers + 1,
-      });
+      setQuizData((prevState) => ({
+        ...prevState,
+        totalCorrectAnswers: prevState.totalCorrectAnswers + 1,
+      }));
       setSelectedOption(option);
       if (quizData.currentQuestion === 10) {
         setResult(true);
@@ -233,7 +233,7 @@ export default function Home() {
                       key={key}
                       className={`option ${
                         selectedOption === key ? "correct" : ""
-                      } text-white`} // Added text-white here
+                      } text-white`}
                       onClick={() => checkAnswer(value, key)}
                     >
                       <b>{key.toUpperCase()})</b>&nbsp; {value}
